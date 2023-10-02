@@ -119,7 +119,9 @@ def find_hair_salons() -> None:
         \nSearching for hair salon with a rating of {min_rating} or higher on a radius of {radius} meters around your location..."
     )
 
-    results = gmaps.places("coiffeur", location=location, radius=radius)
+    results = gmaps.places_nearby(
+        location=center_point, radius=radius, type="hair_care"
+    )
 
     if "results" in results:
         hair_salons = results["results"]
@@ -134,13 +136,10 @@ def find_hair_salons() -> None:
 
             distance = great_circle(center_point, place_point).meters
 
-            if (
-                rating >= min_rating
-                and  distance <= radius
-            ):
+            if rating >= min_rating and distance <= radius:
                 formated_salon = {
                     "name": salon["name"],
-                    "address": salon["formatted_address"],
+                    "address": salon["vicinity"],
                     "rating": rating,
                     "google_maps_link": place_details["result"]["url"],
                     "distance": f"{distance:.0f} meters",
@@ -152,6 +151,8 @@ def find_hair_salons() -> None:
                 f"\nNo hair salons with a rating of {min_rating} or higher were found in the {location} area."
             )
             return
+
+        print(f"\n{len(filtered_salons)} hair salons have been found.")
 
         while filtered_salons:
             random_salon = random.choice(filtered_salons)
@@ -175,7 +176,7 @@ def find_hair_salons() -> None:
 
             if want_to_see_next_salon():
                 continue
-            break
+            return
 
         print(
             f"\nNo more hair salons with a rating of {min_rating} or higher were found in the {location} area."
