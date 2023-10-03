@@ -128,27 +128,33 @@ def find_hair_salons() -> None:
 
         filtered_salons = []
         for salon in hair_salons:
-            place_details = gmaps.place(salon["place_id"])
-            rating = place_details["result"].get("rating", 0.0)
+            name = salon.get("name", "Name not available")
+            address = salon.get("vicinity", "Address not available")
+            rating = salon.get("rating", 0.0)
+            link = salon.get("place_id", "Link not available")
+            if link != "Link not available":
+                link = f"https://www.google.com/maps/place/?q=place_id:{salon['place_id']}"
 
-            place_coords = place_details["result"]["geometry"]["location"]
-            place_point = (place_coords["lat"], place_coords["lng"])
-
-            distance = great_circle(center_point, place_point).meters
+            place_coords = salon.get("geometry", {}).get("location", {})
+            if place_coords:
+                place_point = (place_coords["lat"], place_coords["lng"])
+                distance = great_circle(center_point, place_point).meters
+            else:
+                distance = radius + 1
 
             if rating >= min_rating and distance <= radius:
                 formated_salon = {
-                    "name": salon["name"],
-                    "address": salon["vicinity"],
+                    "name": name,
+                    "address": address,
                     "rating": rating,
-                    "google_maps_link": place_details["result"]["url"],
+                    "link": link,
                     "distance": f"{distance:.0f} meters",
                 }
                 filtered_salons.append(formated_salon)
 
         if not filtered_salons:
             print(
-                f"\nNo hair salons with a rating of {min_rating} or higher were found in the {location} area."
+                f"\nNo hair salons with a rating of {min_rating} or higher were found in the \"{location}\" area."
             )
             return
 
@@ -156,19 +162,17 @@ def find_hair_salons() -> None:
 
         while filtered_salons:
             random_salon = random.choice(filtered_salons)
-            name = random_salon.get("name", "Name not available")
-            address = random_salon.get("address", "Address not available")
-            rating = random_salon.get("rating", "Rating not available")
-            google_maps_link = random_salon.get(
-                "google_maps_link", "Google Maps link not available"
-            )
-            distance = random_salon.get("distance", "Distance not available")
+            name = random_salon["name"]
+            address = random_salon["address"]
+            rating = random_salon["rating"]
+            link = random_salon["link"]
+            distance = random_salon["distance"]
 
             print(
                 f"\nName: {name} \
                 \nAddress: {address} \
                 \nRating: {rating_to_stars(rating)} ({rating}) \
-                \nGoogle Maps Link: {google_maps_link} \
+                \nGoogle Maps Link: {link} \
                 \nFlying distance: {distance}"
             )
 
@@ -179,11 +183,11 @@ def find_hair_salons() -> None:
             return
 
         print(
-            f"\nNo more hair salons with a rating of {min_rating} or higher were found in the {location} area."
+            f"\nNo more hair salons with a rating of {min_rating} or higher were found in the \"{location}\" area."
         )
 
     else:
-        print(f"No hair salons found in the {location} area.")
+        print(f"No hair salons found in the \"{location}\" area.")
 
 
 if __name__ == "__main__":
