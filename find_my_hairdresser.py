@@ -36,7 +36,7 @@ def get_valid_rating() -> float:
 
 def get_valid_radius() -> int:
     """
-    Asks the user for a valid radius between 0 and 50000.
+    Asks the user for a valid radius between 0 and 2_000.
 
     :return: The valid radius.
     :rtype: int
