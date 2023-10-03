@@ -1,4 +1,5 @@
 import random
+import time
 import os
 
 from dotenv import load_dotenv
@@ -44,7 +45,7 @@ def get_valid_radius() -> int:
         radius_str = input("Enter the radius (in meters): ")
         try:
             radius = int(radius_str)
-            if 0 <= radius <= 50_000:
+            if 0 <= radius <= 2_000:
                 return radius
             else:
                 print("Please enter a valid radius.")
@@ -123,10 +124,10 @@ def find_hair_salons() -> None:
         location=center_point, radius=radius, type="hair_care"
     )
 
-    if "results" in results:
+    filtered_salons = []
+    while "results" in results:
         hair_salons = results["results"]
 
-        filtered_salons = []
         for salon in hair_salons:
             name = salon.get("name", "Name not available")
             address = salon.get("vicinity", "Address not available")
@@ -152,42 +153,53 @@ def find_hair_salons() -> None:
                 }
                 filtered_salons.append(formated_salon)
 
-        if not filtered_salons:
-            print(
-                f"\nNo hair salons with a rating of {min_rating} or higher were found in the \"{location}\" area."
+        if "next_page_token" in results:
+            # There is a short delay between when a next_page_token is issued, and when it will become valid.
+            time.sleep(2)
+            results = gmaps.places_nearby(
+                location=center_point,
+                radius=radius,
+                page_token=results["next_page_token"]
             )
-            return
-
-        print(f"\n{len(filtered_salons)} hair salons have been found.")
-
-        while filtered_salons:
-            random_salon = random.choice(filtered_salons)
-            name = random_salon["name"]
-            address = random_salon["address"]
-            rating = random_salon["rating"]
-            link = random_salon["link"]
-            distance = random_salon["distance"]
-
-            print(
-                f"\nName: {name} \
-                \nAddress: {address} \
-                \nRating: {rating_to_stars(rating)} ({rating}) \
-                \nGoogle Maps Link: {link} \
-                \nFlying distance: {distance}"
-            )
-
-            filtered_salons.remove(random_salon)
-
-            if want_to_see_next_salon():
-                continue
-            return
-
-        print(
-            f"\nNo more hair salons with a rating of {min_rating} or higher were found in the \"{location}\" area."
-        )
-
+        else:
+            break
     else:
         print(f"No hair salons found in the \"{location}\" area.")
+        return
+
+    if not filtered_salons:
+        print(
+            f"\nNo hair salons with a rating of {min_rating} or higher were found in the \"{location}\" area."
+        )
+        return
+
+    print(f"\n{len(filtered_salons)} hair salons have been found.")
+
+    while filtered_salons:
+        random_salon = random.choice(filtered_salons)
+        name = random_salon["name"]
+        address = random_salon["address"]
+        rating = random_salon["rating"]
+        link = random_salon["link"]
+        distance = random_salon["distance"]
+
+        print(
+            f"\nName: {name} \
+            \nAddress: {address} \
+            \nRating: {rating_to_stars(rating)} ({rating}) \
+            \nGoogle Maps Link: {link} \
+            \nFlying distance: {distance}"
+        )
+
+        filtered_salons.remove(random_salon)
+
+        if want_to_see_next_salon():
+            continue
+        return
+
+    print(
+        f"\nNo more hair salons with a rating of {min_rating} or higher were found in the \"{location}\" area."
+    )
 
 
 if __name__ == "__main__":
